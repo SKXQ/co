@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        .minesweeper-container {
+            display: grid;
+            grid-template-columns: repeat(7, 60px);
+            grid-template-rows: repeat(7, 60px);
+            gap: 2px;
+        }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            background-color: #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .cell.hidden {
+            background-color: #787C7F;
+        }
+
+        .cell.clicked {
+            background-color: #787C7F;
+        }
+
+        .cell.green {
+            background-color: #78CF6F;
+        }
+
+        .cell.green.clicked {
+            background-color: #78CF6F;
+        }
+
+        .cell.yellow {
+            background-color: #FAD04F;
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .button {
+            padding: 8px 16px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+
+        .button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+    <title>Colors</title>
+</head>
+<body>
+<header>
+<center><h1>Color Game</h1></center>
+</header>
+<br>
+<br>
+<br>
+    <div class="minesweeper-container" id="minesweeper-container">
+    </div>
+    <div class="message" id="message" style="display: none;"></div>
+    <div class="buttons" id="buttons" style="display: none;">
+        <button class="button" id="shareButton">Share</button>
+        <button class="button" id="nextButton">New</button>
+    </div>
+    <script>
+        const container = document.getElementById('minesweeper-container');
+        const messageElement = document.getElementById('message');
+        const buttonsElement = document.getElementById('buttons');
+        const shareButton = document.getElementById('shareButton');
+        const nextButton = document.getElementById('nextButton');
+
+        let isGameOver = false;
+        let tilesClicked = 0;
+        let clickedTiles = {};
+
+        const gridSize = 7;
+        let greenTileRow = Math.floor(Math.random() * gridSize);
+        let greenTileCol = Math.floor(Math.random() * gridSize);
+
+        function createCell(row, col) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.row = row;
+            cell.dataset.col = col;
+            cell.addEventListener('click', handleClick);
+            container.appendChild(cell);
+        }
+
+        function handleClick(event) {
+            if (isGameOver) return;
+
+            const cell = event.target;
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+
+            if (clickedTiles[`${row}-${col}`]) {
+                return; // Don't count multiple clicks on the same tile
+            }
+
+            clickedTiles[`${row}-${col}`] = true;
+
+            if (row === greenTileRow && col === greenTileCol) {
+                cell.classList.add('green', 'clicked');
+                if (tilesClicked === 0) {
+                    messageElement.textContent = 'Spectacular!';
+                    messageElement.style.color = '#78CF6F';
+                } else {
+                    gameOver();
+                }
+            } else if (
+                Math.abs(row - greenTileRow) <= 1 &&
+                Math.abs(col - greenTileCol) <= 1
+            ) {
+                cell.classList.add('yellow');
+            } else {
+                cell.classList.add('clicked');
+            }
+
+            tilesClicked++;
+        }
+
+        function gameOver() {
+            isGameOver = true;
+            messageElement.textContent = `Congrats! But you clicked on ${tilesClicked} tiles.`;
+            messageElement.style.color = 'black';
+            messageElement.style.display = 'block';
+            buttonsElement.style.display = 'flex';
+        }
+
+        function createBoard() {
+            for (let row = 0; row < gridSize; row++) {
+                for (let col = 0; col < gridSize; col++) {
+                    createCell(row, col);
+                }
+            }
+        }
+
+        function restartGame() {
+            container.innerHTML = '';
+            messageElement.style.display = 'none';
+            buttonsElement.style.display = 'none';
+            isGameOver = false;
+            tilesClicked = 0;
+            clickedTiles = {};
+            greenTileRow = Math.floor(Math.random() * gridSize);
+            greenTileCol = Math.floor(Math.random() * gridSize);
+            createBoard();
+        }
+
+        function shareGridAsPNG() {
+            html2canvas(container, { useCORS: true }).then(canvas => {
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = 'minesweeper.png';
+                link.click();
+            });
+        }
+
+        createBoard();
+
+        shareButton.addEventListener('click', shareGridAsPNG);
+        nextButton.addEventListener('click', restartGame);
+    </script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+</body>
+</html>
